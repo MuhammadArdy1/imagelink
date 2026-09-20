@@ -3,135 +3,75 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="ImageLink turns your images into shareable links in seconds."
-    />
-    <meta name="theme-color" content="#0d1020" />
-    <title>ImageLink — Share images beautifully</title>
+    <meta name="description" content="Upload an image and get a shareable public link in seconds." />
+    <meta name="theme-color" content="#5148e8" />
+    <title>ImageLink — Upload and share</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="page-glow page-glow-one" aria-hidden="true"></div>
-    <div class="page-glow page-glow-two" aria-hidden="true"></div>
-
     <div class="app-shell">
       <header class="topbar">
         <a class="brand-wrap" href="/" aria-label="ImageLink home">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M7 17 17 7M8 7h9v9" />
-            </svg>
-          </span>
-          <span class="brand-copy">
-            <strong>ImageLink</strong>
-            <span>Simple image sharing</span>
-          </span>
+          <span class="brand-mark" aria-hidden="true">↗</span>
+          <span class="brand-copy"><strong>ImageLink</strong><span>Simple image sharing</span></span>
         </a>
-
-        <div class="topbar-actions">
-          <span class="status-pill"><span class="status-dot"></span>Ready to upload</span>
-          <button
-            id="themeToggle"
-            class="theme-toggle"
-            type="button"
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-          >
-            ☀️
-          </button>
-        </div>
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">☀️</button>
       </header>
 
       <main>
         <section class="hero">
-          <div class="eyebrow"><span>✦</span> Fast, clean, shareable</div>
-          <h1>Make every image<br /><span>easy to share.</span></h1>
-          <p class="hero-copy">
-            Upload an image and get a beautiful public link, ready for your website,
-            messages, or social posts.
-          </p>
+          <p class="eyebrow">Fast, clean, shareable</p>
+          <h1>Share an image<br /><span>in seconds.</span></h1>
+          <p class="hero-copy">Choose a photo, upload it, and copy your public link. No URLs or technical setup needed.</p>
         </section>
 
         <section class="card upload-card" aria-labelledby="upload-title">
           <div class="upload-heading">
-            <div>
-              <p class="overline">Start here</p>
-              <h2 id="upload-title">Upload your image</h2>
-            </div>
+            <div><p class="overline">Step 1</p><h2 id="upload-title">Choose an image</h2></div>
             <span class="secure-badge">🔒 Secure upload</span>
           </div>
-
-          <div
-            id="dropZone"
-            class="upload-zone"
-            tabindex="0"
-            role="button"
-            aria-label="Choose an image to upload"
-          >
-            <input
-              id="fileInput"
-              type="file"
-              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-              hidden
-            />
-            <div class="upload-illustration" aria-hidden="true">
-              <svg viewBox="0 0 64 64" fill="none">
-                <rect x="8" y="11" width="48" height="42" rx="12" fill="currentColor" opacity=".12" />
-                <path d="M21 43 30 33l6 6 5-6 8 10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                <circle cx="40" cy="24" r="4" fill="currentColor" />
-                <path d="M32 18v12m-5-7 5-5 5 5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
-            <h3>Drop your image here</h3>
-            <p>or choose a file from your device</p>
-            <button id="chooseImageBtn" type="button" class="btn btn-primary">
-              <span>Choose Image</span><span class="button-arrow" aria-hidden="true">↗</span>
-            </button>
+          <div id="dropZone" class="upload-zone" tabindex="0" role="button" aria-label="Choose an image to upload">
+            <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" capture="environment" />
+            <div class="upload-illustration" aria-hidden="true">⌁</div>
+            <h3>Pick a photo from your device</h3>
+            <p>Use your gallery or camera. Drag and drop also works on desktop.</p>
+            <button id="chooseImageBtn" type="button" class="btn btn-primary">Choose Image <span aria-hidden="true">↗</span></button>
             <div class="format-row"><span>JPG</span><span>PNG</span><span>WEBP</span><i>Up to 10 MB</i></div>
           </div>
         </section>
 
-        <div class="how-it-works" aria-label="How ImageLink works">
-          <div class="step"><span>01</span><p>Choose an image</p></div>
-          <div class="step-line"></div>
-          <div class="step"><span>02</span><p>Upload securely</p></div>
-          <div class="step-line"></div>
-          <div class="step"><span>03</span><p>Share anywhere</p></div>
-        </div>
+        <div id="errorBox" class="message error hidden" role="alert" aria-live="assertive"></div>
+        <div id="statusBox" class="message status hidden" role="status" aria-live="polite"></div>
 
-        <div id="errorBox" class="message error hidden" role="alert"></div>
-
-        <section id="previewSection" class="card preview-card hidden">
-          <div class="section-header"><div><p class="overline">Almost there</p><h3>Image preview</h3></div><span class="section-number">02</span></div>
-          <div class="preview-box"><img id="previewImage" alt="Selected preview" /></div>
-          <div class="file-info"><p id="fileName" class="file-name">filename.png</p><p id="fileMeta" class="file-meta">1.4 MB • PNG</p></div>
+        <section id="previewSection" class="card preview-card hidden" aria-labelledby="preview-title">
+          <div class="section-header"><div><p class="overline">Step 2</p><h2 id="preview-title">Preview</h2></div></div>
+          <div class="preview-box"><img id="previewImage" alt="Selected image preview" /></div>
+          <div class="file-info"><p id="fileName" class="file-name"></p><p id="fileMeta" class="file-meta"></p></div>
+          <div id="uploadProgress" class="progress-wrap hidden" aria-live="polite">
+            <div class="progress-label"><span id="progressText">Uploading image...</span><span id="progressPercent">0%</span></div>
+            <div class="upload-progress"><div id="progressBar" class="upload-progress-bar"></div></div>
+          </div>
           <div class="action-row">
             <button id="removeBtn" type="button" class="btn btn-secondary">Remove</button>
-            <button id="uploadBtn" type="button" class="btn btn-primary">Upload Image <span class="button-arrow" aria-hidden="true">↗</span></button>
+            <button id="uploadBtn" type="button" class="btn btn-primary">Upload Image <span aria-hidden="true">↗</span></button>
           </div>
         </section>
 
-        <section id="successSection" class="card result-card hidden">
-          <div class="success-heading"><div class="success-icon">✓</div><div><p class="overline success-label">Upload complete</p><h3>Your image is ready!</h3></div></div>
+        <section id="successSection" class="card result-card hidden" aria-labelledby="success-title">
+          <div class="success-heading"><div class="success-icon">✓</div><div><p class="overline success-label">Step 3</p><h2 id="success-title">Image uploaded successfully!</h2></div></div>
           <div class="result-preview"><img id="resultPreview" alt="Uploaded image preview" /></div>
-          <div class="url-group"><label for="imageUrlInput">Your shareable link</label><div class="copy-field"><input id="imageUrlInput" type="text" readonly aria-label="Image URL" /><button id="copyLinkBtn" type="button" class="btn btn-primary">Copy Link</button></div></div>
-          <div class="secondary-actions"><a id="openImageLink" class="btn btn-secondary external-link" href="#" target="_blank" rel="noopener noreferrer">Open Image <span aria-hidden="true">↗</span></a></div>
+          <div class="url-group"><label for="imageUrlInput">Image Link</label><div class="copy-field"><input id="imageUrlInput" type="text" readonly aria-label="Image URL" /><button id="copyLinkBtn" type="button" class="btn btn-primary">Copy Link</button></div></div>
+          <button id="tryAgainBtn" type="button" class="btn btn-secondary try-again">Upload another image</button>
         </section>
 
-        <section id="htmlSection" class="card code-card hidden"><div class="code-heading"><div><p class="overline">For websites</p><h3>HTML Code</h3></div><span class="code-label">HTML</span></div><textarea id="htmlCode" readonly aria-label="HTML code"></textarea><button id="copyHtmlBtn" type="button" class="btn btn-secondary">Copy HTML <span aria-hidden="true">⧉</span></button></section>
-        <section id="markdownSection" class="card code-card hidden"><div class="code-heading"><div><p class="overline">For docs & posts</p><h3>Markdown</h3></div><span class="code-label">MD</span></div><textarea id="markdownCode" readonly aria-label="Markdown code"></textarea><button id="copyMarkdownBtn" type="button" class="btn btn-secondary">Copy Markdown <span aria-hidden="true">⧉</span></button></section>
+        <section id="htmlSection" class="card code-card hidden"><div class="code-heading"><h3>HTML snippet</h3><span class="code-label">HTML</span></div><textarea id="htmlCode" readonly aria-label="HTML snippet"></textarea><button id="copyHtmlBtn" type="button" class="btn btn-secondary">Copy HTML</button></section>
+        <section id="markdownSection" class="card code-card hidden"><div class="code-heading"><h3>Markdown snippet</h3><span class="code-label">MD</span></div><textarea id="markdownCode" readonly aria-label="Markdown snippet"></textarea><button id="copyMarkdownBtn" type="button" class="btn btn-secondary">Copy Markdown</button></section>
       </main>
-
-      <footer class="footer"><span>ImageLink</span><span>Made for sharing beautiful things.</span></footer>
+      <footer class="footer">ImageLink <span>Made for sharing beautiful things.</span></footer>
     </div>
-
     <script src="script.js"></script>
   </body>
 </html>
