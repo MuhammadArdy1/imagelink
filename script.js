@@ -24,311 +24,84 @@ const copyLinkBtn = document.getElementById("copyLinkBtn");
 const copyHtmlBtn = document.getElementById("copyHtmlBtn");
 const copyMarkdownBtn = document.getElementById("copyMarkdownBtn");
 
-const state = {
-  selectedFile: null,
-  selectedUrl: "",
-  uploadedUrl: "",
-  uploadInProgress: false,
-};
+const state = { selectedFile: null, selectedUrl: "", uploadedUrl: "", uploadInProgress: false };
 
 function setTheme(theme) {
   const dark = theme === "dark";
   document.body.classList.toggle("dark", dark);
   localStorage.setItem("imagelink-theme", theme);
   themeToggle.textContent = dark ? "🌙" : "☀️";
+  themeToggle.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
 }
-
 function initTheme() {
   const savedTheme = localStorage.getItem("imagelink-theme");
-  if (savedTheme) {
-    setTheme(savedTheme);
-    return;
-  }
-
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  setTheme(prefersDark ? "dark" : "light");
+  if (savedTheme) return setTheme(savedTheme);
+  setTheme(window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 }
+themeToggle.addEventListener("click", () => setTheme(document.body.classList.contains("dark") ? "light" : "dark"));
 
-themeToggle.addEventListener("click", () => {
-  const isDark = document.body.classList.contains("dark");
-  setTheme(isDark ? "light" : "dark");
-});
-
-function showError(message) {
-  errorBox.textContent = message;
-  errorBox.classList.remove("hidden");
-  errorBox.classList.add("error");
-  errorBox.classList.remove("success");
-}
-
-function clearError() {
-  errorBox.textContent = "";
-  errorBox.classList.add("hidden");
-  errorBox.classList.remove("error");
-  errorBox.classList.remove("success");
-}
-
-function formatBytes(bytes) {
-  if (bytes === 0) return "0 Bytes";
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), sizes.length - 1);
-  const value = bytes / 1024 ** i;
-  return `${value.toFixed(value >= 10 || i === 0 ? 0 : 1)} ${sizes[i]}`;
-}
-
+function showError(message) { errorBox.textContent = message; errorBox.className = "message error"; }
+function clearError() { errorBox.textContent = ""; errorBox.className = "message error hidden"; }
+function formatBytes(bytes) { if (!bytes) return "0 Bytes"; const sizes = ["Bytes", "KB", "MB", "GB"]; const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), sizes.length - 1); const value = bytes / 1024 ** i; return `${value.toFixed(value >= 10 || i === 0 ? 0 : 1)} ${sizes[i]}`; }
 function validateFile(file) {
-  if (!file) {
-    throw new Error("No file selected.");
-  }
-
+  if (!file) throw new Error("No file selected.");
   const extension = (file.name || "").split(".").pop()?.toLowerCase();
-  const allowedExtensions = ["jpg", "jpeg", "png", "webp"];
-
-  if (!file.type || !ALLOWED_TYPES.includes(file.type)) {
-    if (!allowedExtensions.includes(extension)) {
-      throw new Error("Unsupported image format.");
-    }
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error("File is too large. Please choose an image under 10 MB.");
-  }
+  if ((!file.type || !ALLOWED_TYPES.includes(file.type)) && !["jpg", "jpeg", "png", "webp"].includes(extension)) throw new Error("Unsupported image format.");
+  if (file.size > MAX_FILE_SIZE) throw new Error("File is too large. Please choose an image under 10 MB.");
 }
-
 function renderPreview(file) {
   const reader = new FileReader();
-  reader.onload = (e) => {
-    previewImage.src = e.target.result;
-    resultPreview.src = e.target.result;
-    state.selectedUrl = e.target.result;
-  };
+  reader.onload = (event) => { previewImage.src = event.target.result; resultPreview.src = event.target.result; state.selectedUrl = event.target.result; };
   reader.readAsDataURL(file);
-
   fileName.textContent = file.name;
-  const format = (file.type || "image/jpeg").split("/").pop().toUpperCase();
-  fileMeta.textContent = `${formatBytes(file.size)} • ${format}`;
-  previewSection.classList.remove("hidden");
-  clearError();
+  fileMeta.textContent = `${formatBytes(file.size)} • ${(file.type || "image/jpeg").split("/").pop().toUpperCase()}`;
+  previewSection.classList.remove("hidden"); clearError();
 }
-
 function resetSelectedFile() {
-  state.selectedFile = null;
-  state.selectedUrl = "";
-  fileInput.value = "";
-  previewSection.classList.add("hidden");
-  successSection.classList.add("hidden");
-  htmlSection.classList.add("hidden");
-  markdownSection.classList.add("hidden");
-  imageUrlInput.value = "";
-  resultPreview.src = "";
-  previewImage.src = "";
-  openImageLink.href = "#";
-  clearError();
+  state.selectedFile = null; state.selectedUrl = ""; fileInput.value = "";
+  previewSection.classList.add("hidden"); successSection.classList.add("hidden"); htmlSection.classList.add("hidden"); markdownSection.classList.add("hidden");
+  imageUrlInput.value = ""; resultPreview.src = ""; previewImage.src = ""; openImageLink.href = "#"; clearError();
 }
-
-chooseImageBtn.addEventListener("click", () => fileInput.click());
-
-fileInput.addEventListener("change", (event) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  try {
-    validateFile(file);
-    state.selectedFile = file;
-    renderPreview(file);
-  } catch (error) {
-    showError(error.message);
-  }
-});
-
+function selectFile(file) { try { validateFile(file); state.selectedFile = file; renderPreview(file); } catch (error) { showError(error.message); } }
+chooseImageBtn.addEventListener("click", (event) => { event.stopPropagation(); fileInput.click(); });
+fileInput.addEventListener("change", (event) => selectFile(event.target.files?.[0]));
 dropZone.addEventListener("click", () => fileInput.click());
+dropZone.addEventListener("dragover", (event) => { event.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop", (event) => { event.preventDefault(); dropZone.classList.remove("dragover"); selectFile(event.dataTransfer.files?.[0]); });
+dropZone.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); fileInput.click(); } });
+removeBtn.addEventListener("click", resetSelectedFile);
 
-dropZone.addEventListener("dragover", (event) => {
-  event.preventDefault();
-  dropZone.classList.add("dragover");
-});
-
-dropZone.addEventListener("dragleave", () => {
-  dropZone.classList.remove("dragover");
-});
-
-dropZone.addEventListener("drop", (event) => {
-  event.preventDefault();
-  dropZone.classList.remove("dragover");
-  const file = event.dataTransfer.files?.[0];
-  if (!file) return;
-
-  try {
-    validateFile(file);
-    state.selectedFile = file;
-    renderPreview(file);
-  } catch (error) {
-    showError(error.message);
-  }
-});
-
-dropZone.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    fileInput.click();
-  }
-});
-
-removeBtn.addEventListener("click", () => {
-  resetSelectedFile();
-});
-
-function removeProgress() {
-  const progress = document.querySelector(".upload-progress");
-  const text = document.querySelector(".progress-text");
-  if (progress) progress.remove();
-  if (text) text.remove();
+function removeProgress() { document.querySelector(".upload-progress")?.remove(); document.querySelector(".progress-text")?.remove(); }
+function showUploadProgress(percent, text) {
+  removeProgress(); const wrap = document.createElement("div"); wrap.className = "upload-progress"; const bar = document.createElement("div"); bar.className = "upload-progress-bar"; bar.style.width = `${percent}%`; wrap.appendChild(bar); const label = document.createElement("p"); label.className = "progress-text"; label.textContent = text; previewSection.append(wrap, label);
 }
-
-function showUploadProgress(progressPercent, statusText) {
-  removeProgress();
-
-  const wrap = document.createElement("div");
-  wrap.className = "upload-progress";
-
-  const bar = document.createElement("div");
-  bar.className = "upload-progress-bar";
-  bar.style.width = `${progressPercent}%`;
-
-  const label = document.createElement("p");
-  label.className = "progress-text";
-  label.textContent = statusText;
-
-  wrap.appendChild(bar);
-
-  const previewCard = document.querySelector(".preview-card");
-  previewCard.appendChild(wrap);
-  previewCard.appendChild(label);
-}
-
-uploadBtn.addEventListener("click", async () => {
+uploadBtn.addEventListener("click", () => {
   if (!state.selectedFile || state.uploadInProgress) return;
-
-  const formData = new FormData();
-  formData.append("image", state.selectedFile);
-
-  state.uploadInProgress = true;
-  uploadBtn.disabled = true;
-  uploadBtn.textContent = "Uploading...";
-  clearError();
-  showUploadProgress(0, "Uploading...");
-
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", "/api/upload", true);
-
-  xhr.upload.addEventListener("progress", (event) => {
-    if (event.lengthComputable) {
-      const percent = Math.round((event.loaded / event.total) * 100);
-      showUploadProgress(percent, `Uploading... ${percent}%`);
-    }
-  });
-
+  const formData = new FormData(); formData.append("image", state.selectedFile); state.uploadInProgress = true; uploadBtn.disabled = true; uploadBtn.innerHTML = "Uploading..."; clearError(); showUploadProgress(0, "Uploading...");
+  const xhr = new XMLHttpRequest(); xhr.open("POST", "/api/upload", true);
+  xhr.upload.addEventListener("progress", (event) => { if (event.lengthComputable) { const percent = Math.round((event.loaded / event.total) * 100); showUploadProgress(percent, `Uploading... ${percent}%`); } });
   xhr.onload = () => {
-    state.uploadInProgress = false;
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = "Upload Image";
-
+    state.uploadInProgress = false; uploadBtn.disabled = false; uploadBtn.innerHTML = 'Upload Image <span class="button-arrow" aria-hidden="true">↗</span>';
     if (xhr.status >= 200 && xhr.status < 300) {
       try {
-        const response = JSON.parse(xhr.responseText);
-        const uploadedUrl = response?.data?.url || response?.url;
-
-        if (!uploadedUrl) {
-          throw new Error("Upload succeeded but image URL is unavailable.");
-        }
-
-        state.uploadedUrl = uploadedUrl;
-        imageUrlInput.value = uploadedUrl;
-        openImageLink.href = uploadedUrl;
-        resultPreview.src = uploadedUrl;
-        htmlCode.value = `<img src="${uploadedUrl}" alt="Uploaded image">`;
-        markdownCode.value = `"Uploaded image" (${uploadedUrl})`;
-
-        successSection.classList.remove("hidden");
-        htmlSection.classList.remove("hidden");
-        markdownSection.classList.remove("hidden");
-
-        const successMessage = document.querySelector(".message.success");
-        if (successMessage) successMessage.remove();
-
-        const newSuccess = document.createElement("div");
-        newSuccess.className = "message success";
-        newSuccess.textContent = "Upload successful!";
-        previewSection.insertBefore(newSuccess, previewSection.firstChild);
-
-        showUploadProgress(100, "Upload successful!");
-      } catch (error) {
-        showError("Upload succeeded but the response could not be processed.");
-      }
-    } else {
-      try {
-        const errorResponse = JSON.parse(xhr.responseText);
-        showError(errorResponse?.message || "Upload failed. Please try again.");
-      } catch {
-        showError("Upload failed. Please try again.");
-      }
-    }
+        const response = JSON.parse(xhr.responseText); const uploadedUrl = response?.data?.url || response?.url; if (!uploadedUrl) throw new Error();
+        state.uploadedUrl = uploadedUrl; imageUrlInput.value = uploadedUrl; openImageLink.href = uploadedUrl; resultPreview.src = uploadedUrl; htmlCode.value = `<img src="${uploadedUrl}" alt="Uploaded image">`; markdownCode.value = `![Uploaded image](${uploadedUrl})`;
+        successSection.classList.remove("hidden"); htmlSection.classList.remove("hidden"); markdownSection.classList.remove("hidden"); document.querySelector(".message.success")?.remove(); const success = document.createElement("div"); success.className = "message success"; success.textContent = "Upload successful! Your link is ready to share."; previewSection.prepend(success); showUploadProgress(100, "Upload successful!");
+      } catch { showError("Upload succeeded but the image URL is unavailable."); }
+    } else { try { showError(JSON.parse(xhr.responseText)?.message || "Upload failed. Please try again."); } catch { showError("Upload failed. Please try again."); } }
   };
-
-  xhr.onerror = () => {
-    state.uploadInProgress = false;
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = "Upload Image";
-    showError("Network error. Please check your connection and try again.");
-  };
-
-  xhr.onabort = () => {
-    state.uploadInProgress = false;
-    uploadBtn.disabled = false;
-    uploadBtn.textContent = "Upload Image";
-    showError("Upload was interrupted.");
-  };
-
+  xhr.onerror = () => { state.uploadInProgress = false; uploadBtn.disabled = false; uploadBtn.innerHTML = 'Upload Image <span class="button-arrow" aria-hidden="true">↗</span>'; showError("Network error. Please check your connection and try again."); };
+  xhr.onabort = () => { state.uploadInProgress = false; uploadBtn.disabled = false; uploadBtn.innerHTML = 'Upload Image <span class="button-arrow" aria-hidden="true">↗</span>'; showError("Upload was interrupted."); };
   xhr.send(formData);
 });
 
-async function copyText(value, button, defaultText, successText = "Copied!") {
-  try {
-    await navigator.clipboard.writeText(value);
-    const originalText = button.textContent;
-    button.textContent = successText;
-    setTimeout(() => {
-      button.textContent = originalText || defaultText;
-    }, 1800);
-  } catch (error) {
-    const textarea = document.createElement("textarea");
-    textarea.value = value;
-    textarea.setAttribute("readonly", "");
-    textarea.style.position = "fixed";
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
-
-    const originalText = button.textContent;
-    button.textContent = successText;
-    setTimeout(() => {
-      button.textContent = originalText || defaultText;
-    }, 1800);
-  }
+async function copyText(value, button, defaultText) {
+  if (!value) return;
+  try { await navigator.clipboard.writeText(value); } catch { const textarea = document.createElement("textarea"); textarea.value = value; textarea.setAttribute("readonly", ""); textarea.style.position = "fixed"; textarea.style.opacity = "0"; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove(); }
+  const original = button.innerHTML; button.textContent = "Copied!"; setTimeout(() => { button.innerHTML = original || defaultText; }, 1800);
 }
-
-copyLinkBtn.addEventListener("click", () => {
-  copyText(imageUrlInput.value, copyLinkBtn, "Copy Link");
-});
-
-copyHtmlBtn.addEventListener("click", () => {
-  copyText(htmlCode.value, copyHtmlBtn, "Copy HTML");
-});
-
-copyMarkdownBtn.addEventListener("click", () => {
-  copyText(markdownCode.value, copyMarkdownBtn, "Copy Markdown");
-});
-
+copyLinkBtn.addEventListener("click", () => copyText(imageUrlInput.value, copyLinkBtn, "Copy Link"));
+copyHtmlBtn.addEventListener("click", () => copyText(htmlCode.value, copyHtmlBtn, "Copy HTML"));
+copyMarkdownBtn.addEventListener("click", () => copyText(markdownCode.value, copyMarkdownBtn, "Copy Markdown"));
 initTheme();
