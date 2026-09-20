@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ImageLink converts an image into a shareable URL with copyable HTML and Markdown snippets."
+    />
+    <title>ImageLink</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark" aria-hidden="true">I</div>
+          <div>
+            <h1>ImageLink</h1>
+            <p>Turn your image into a shareable link.</p>
+          </div>
+        </div>
+
+        <button
+          id="themeToggle"
+          class="theme-toggle"
+          type="button"
+          aria-label="Toggle dark mode"
+          title="Toggle theme"
+        >
+          ☀️
+        </button>
+      </header>
+
+      <main class="content">
+        <section class="card upload-card">
+          <div
+            id="dropZone"
+            class="upload-zone"
+            tabindex="0"
+            role="button"
+            aria-label="Upload your image"
+          >
+            <input
+              id="fileInput"
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+              hidden
+            />
+
+            <div class="upload-icon" aria-hidden="true">⬆️</div>
+            <h2>Upload your image</h2>
+            <p>JPG, PNG, WEBP</p>
+
+            <button id="chooseImageBtn" type="button" class="btn btn-primary">
+              Choose Image
+            </button>
+          </div>
+        </section>
+
+        <div id="errorBox" class="message error hidden" role="alert"></div>
+
+        <section id="previewSection" class="card preview-card hidden">
+          <div class="section-header">
+            <h3>Image preview</h3>
+          </div>
+
+          <div class="preview-box">
+            <img id="previewImage" alt="Selected preview" />
+          </div>
+
+          <div class="file-info">
+            <p id="fileName" class="file-name">filename.png</p>
+            <p id="fileMeta" class="file-meta">1.4 MB • PNG</p>
+          </div>
+
+          <div class="action-row">
+            <button id="removeBtn" type="button" class="btn btn-secondary">
+              Remove
+            </button>
+            <button id="uploadBtn" type="button" class="btn btn-primary">
+              Upload Image
+            </button>
+          </div>
+        </section>
+
+        <section id="successSection" class="card result-card hidden">
+          <div class="section-header">
+            <h3>Your image is ready!</h3>
+          </div>
+
+          <div class="result-preview">
+            <img id="resultPreview" alt="Uploaded image preview" />
+          </div>
+
+          <div class="url-group">
+            <label for="imageUrlInput">Image URL</label>
+            <div class="copy-field">
+              <input
+                id="imageUrlInput"
+                type="text"
+                readonly
+                aria-label="Image URL"
+              />
+              <button id="copyLinkBtn" type="button" class="btn btn-primary">
+                Copy Link
+              </button>
+            </div>
+          </div>
+
+          <div class="secondary-actions">
+            <a
+              id="openImageLink"
+              class="btn btn-secondary external-link"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open Image
+            </a>
+          </div>
+        </section>
+
+        <section id="htmlSection" class="card code-card hidden">
+          <div class="section-header">
+            <h3>HTML Code</h3>
+          </div>
+          <textarea id="htmlCode" readonly aria-label="HTML code"></textarea>
+          <button id="copyHtmlBtn" type="button" class="btn btn-primary">
+            Copy HTML
+          </button>
+        </section>
+
+        <section id="markdownSection" class="card code-card hidden">
+          <div class="section-header">
+            <h3>Markdown</h3>
+          </div>
+          <textarea id="markdownCode" readonly aria-label="Markdown code"></textarea>
+          <button id="copyMarkdownBtn" type="button" class="btn btn-primary">
+            Copy Markdown
+          </button>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
