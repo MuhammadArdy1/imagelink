@@ -7,7 +7,8 @@ require("dotenv").config();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-const MAX_FILE_SIZE = Number(process.env.UPLOAD_LIMIT_MB || 10) * 1024 * 1024;
+const configuredLimit = Number(process.env.UPLOAD_LIMIT_MB || 10);
+const MAX_FILE_SIZE = (Number.isFinite(configuredLimit) && configuredLimit > 0 ? configuredLimit : 10) * 1024 * 1024;
 const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || "").replace(/\/$/, "");
 const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const allowedExtensions = new Set([".jpg", ".jpeg", ".png", ".webp"]);
@@ -35,9 +36,7 @@ const upload = multer({
   fileFilter: (_req, file, callback) => {
     const extensionAllowed = allowedExtensions.has(path.extname(file.originalname).toLowerCase());
     if (!allowedMimeTypes.has(file.mimetype) || !extensionAllowed) {
-      const error = new Error("This image format is not supported.");
-      error.code = "UNSUPPORTED_FORMAT";
-      return callback(error);
+      const error = new Error("This image format is not supported."); error.code = "UNSUPPORTED_FORMAT"; return callback(error);
     }
     callback(null, true);
   },
@@ -46,20 +45,18 @@ const upload = multer({
 app.post("/api/upload", (req, res) => {
   upload.single("image")(req, res, (error) => {
     if (error) {
-      if (error.code === "LIMIT_FILE_SIZE") return res.status(413).json({ code: error.code, message: "This image is too large. Please choose an image under 10 MB." });
-      if (error.code === "UNSUPPORTED_FORMAT") return res.status(415).json({ code: error.code, message: "This image format is not supported." });
       console.error("Upload parsing error:", error);
-      return res.status(400).json({ code: "UPLOAD_ERROR", message: "Something went wrong while uploading. Please try again." });
+      if (error.code === "LIMIT_FILE_SIZE") return res.status(413).json({ code: error.code, message: "This image is too large. Please choose an image under 10 MB." });
+      if (error.code === "UNSUPPORTED_FORMAT") return res.status(415).json({ code: error.code, message: error.message });
+      if (error.code === "LIMIT_UNEXPECTED_FILE") return res.status(400).json({ code: error.code, message: 'Expected the image in multipart field "image".' });
+      return res.status(400).json({ code: "UPLOAD_ERROR", message: error.message || "The server could not parse the image upload." });
     }
-    if (!req.file) return res.status(400).json({ code: "NO_FILE", message: "Please choose an image first." });
+    if (!req.file) return res.status(400).json({ code: "NO_FILE", message: 'No image was received. Send a multipart/form-data file in field "image".' });
     const baseUrl = PUBLIC_BASE_URL || `${req.protocol}://${req.get("host")}`;
     const relativePath = `/uploads/${req.file.filename}`;
     return res.status(200).json({ message: "Image uploaded successfully!", data: { filename: req.file.filename, path: relativePath, url: `${baseUrl}${relativePath}` } });
   });
 });
 
-app.use((error, _req, res, _next) => {
-  console.error("Unhandled API error:", error);
-  res.status(500).json({ code: "SERVER_ERROR", message: "The upload server is temporarily unavailable. Please try again." });
-});
+app.use((error, _req, res, _next) => { console.error("Unhandled API error:", error); res.status(500).json({ code: "SERVER_ERROR", message: "The upload server is temporarily unavailable. Please try again." }); });
 app.listen(PORT, () => console.log(`ImageLink running on port ${PORT}`));
