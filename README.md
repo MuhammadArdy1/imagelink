@@ -28,4 +28,6 @@ Jika frontend dan backend berbeda origin, definisikan `window.IMAGELINK_API_URL`
 <script src="script.js"></script>
 ```
 
-Frontend tidak memerlukan API key. Jangan menaruh credential storage atau secret di browser; simpan hanya di environment backend.
+**Important:** if `IMAGELINK_API_URL` is not configured, the browser posts to the current page origin. A static GitHub Pages deployment therefore returns a 404/405 for `/api/upload`; it cannot run this Node backend. Configure the backend URL above and set `CORS_ORIGIN` to the exact frontend origin.
+
+The frontend sends `multipart/form-data` using the `image` field. Do not manually set the `Content-Type` header, because the browser must add the multipart boundary. The backend stores the file locally and returns a public URL; no image-hosting API key is required. Never put storage credentials or secrets in the browser.
